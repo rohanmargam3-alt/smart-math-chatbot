@@ -9,7 +9,7 @@ function add(text, type) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-// ✅ FIXED EQUATION SOLVER
+// ✅ ROBUST LINEAR SOLVER (NO REGEX BUGS)
 function solveEquation(inputText) {
     try {
         let eq = inputText.toLowerCase().replace("solve", "").trim();
@@ -18,26 +18,23 @@ function solveEquation(inputText) {
 
         let [left, right] = eq.split("=");
 
-        let expr = math.simplify(`(${left}) - (${right})`).toString();
+        // Convert to f(x)
+        let expr = math.parse(`(${left}) - (${right})`);
 
-        let match = expr.match(/([+-]?\d*\.?\d*)\*?x([+-]\d+\.?\d*)?/);
+        // Evaluate f(0) = b
+        let b = expr.evaluate({ x: 0 });
 
-        if (match) {
-            let a = match[1];
+        // Evaluate f(1)
+        let f1 = expr.evaluate({ x: 1 });
 
-            if (a === "" || a === "+") a = 1;
-            else if (a === "-") a = -1;
-            else a = parseFloat(a);
+        // slope a = f(1) - f(0)
+        let a = f1 - b;
 
-            let b = match[2] ? parseFloat(match[2]) : 0;
+        if (a === 0) return "❌ No solution";
 
-            if (a === 0) return "❌ No solution";
+        let x = -b / a;
 
-            let x = -b / a;
-            return "✅ x = " + x;
-        }
-
-        return "❌ Unsupported equation";
+        return "✅ x = " + x;
 
     } catch {
         return "❌ Error solving equation";
@@ -77,7 +74,7 @@ function botReply(text) {
     }
 }
 
-// SEND MESSAGE
+// SEND
 function send() {
     let text = input.value.trim();
     if (!text) return;
@@ -87,10 +84,9 @@ function send() {
 
     setTimeout(() => {
         add(botReply(text), "bot");
-    }, 400);
+    }, 300);
 }
 
-// ENTER KEY
 input.addEventListener("keypress", e => {
     if (e.key === "Enter") send();
 });
